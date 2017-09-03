@@ -56,6 +56,6 @@ bool Mqtt::send(const char * _topic, const char * _message)
     // * qos (0,1,2)
     // * retain (boolean) - indicates if message is retained on broker or not
     // Should return MOSQ_ERR_SUCCESS
-    int ret = publish(NULL,_topic,strlen(_message),_message,1,false);
+    int ret = publish(NULL, _topic, strlen(_message), _message, 1, true);
     return ( ret == MOSQ_ERR_SUCCESS );
 }
