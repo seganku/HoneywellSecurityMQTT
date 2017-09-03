@@ -1,2 +1,2 @@
 #!/bin/sh
-g++ -o honeywell --std=c++11 digitalDecoder.cpp analogDecoder.cpp main.cpp -lrtlsdr
+g++  -o honeywell -fdiagnostics-color --std=c++11 mqtt.cpp digitalDecoder.cpp analogDecoder.cpp main.cpp -lrtlsdr -lmosquittopp

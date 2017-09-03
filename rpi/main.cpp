@@ -1,5 +1,6 @@
 #include "digitalDecoder.h"
 #include "analogDecoder.h"
+#include "mqtt.h"
 
 #include <rtl-sdr.h>
 
@@ -13,6 +14,9 @@ float magLut[0x10000];
 
 int main()
 {
+    // Set up MQTT
+    Mqtt mqtt = Mqtt("sensors345", "127.0.0.1", 1883);
+
     //
     // Open the device
     //
@@ -90,7 +94,7 @@ int main()
     // Common Receive
     //
     AnalogDecoder aDecoder;
-    DigitalDecoder dDecoder;
+    DigitalDecoder dDecoder(mqtt);
     
     aDecoder.setCallback([&](char data){dDecoder.handleData(data);});
     

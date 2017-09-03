@@ -1,7 +1,10 @@
 #include "digitalDecoder.h"
+#include "mqtt.h"
 
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <sstream>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <fcntl.h>
@@ -9,14 +12,14 @@
 #include <stdint.h>
 
 
+
 #define SYNC_MASK    0xFFFF000000000000ul
 #define SYNC_PATTERN 0xFFFE000000000000ul
-
 
 void DigitalDecoder::writeDeviceState()
 {
     std::ofstream file;
-    file.open("/var/www/html/deviceState.json");
+    file.open("deviceState.json");
     
     if(!file.is_open())
     {
@@ -48,16 +51,18 @@ void DigitalDecoder::writeDeviceState()
     file.close();
 }
 
-#warning "Update the SmartThings endpoint here"
+//#warning "Update the SmartThings endpoint here"
 void DigitalDecoder::sendDeviceState()
 {
     printf("Sending Device State\n");
-    system("curl -H 'Authorization: Bearer 12345678-1234-1234-1234-1234567890ab' -H 'Content-Type: application/json' -X PUT -d '@/var/www/html/deviceState.json' https://graph.api.smartthings.com:443/api/smartapps/installations/12345678-1234-1234-1234-1234567890ab/event&");
+    //system("curl -H 'Authorization: Bearer 12345678-1234-1234-1234-1234567890ab' -H 'Content-Type: application/json' -X PUT -d '@/var/www/html/deviceState.json' https://graph.api.smartthings.com:443/api/smartapps/installations/12345678-1234-1234-1234-1234567890ab/event&");
 }
 
 void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
 {
     deviceState_t ds;
+    std::ostringstream topic;
+    topic << "/security/" << serial;
     
     // Extract prior info
     if(deviceStateMap.count(serial))
@@ -104,7 +109,8 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     // Send the notification if something changed
     if(state != ds.lastRawState)
     {
-        sendDeviceState();
+        mqtt.send(topic.str().c_str(), ds.alarm ? "ALARM" : "OK");
+        //sendDeviceState();
     }
     deviceStateMap[serial].lastRawState = state;
     
@@ -125,7 +131,13 @@ void DigitalDecoder::handlePayload(uint64_t payload)
     //
     // Check CRC
     //
-    const uint64_t polynomial = 0x18005;
+    uint64_t polynomial;
+    if (sof == 0x2 || sof == 0xA) {
+        polynomial = 0x18050;
+    } else {
+        // sof == 0x8
+        polynomial = 0x18005;
+    }
     uint64_t sum = payload & (~SYNC_MASK);
     uint64_t current_divisor = polynomial << 31;
     
@@ -156,17 +168,17 @@ void DigitalDecoder::handlePayload(uint64_t payload)
     //
     // Print Packet
     //
-// #ifdef __arm__
-//     if(valid)    
-//         printf("Valid Payload: %llX (Serial %llu, Status %llX)\n", payload, ser, typ);
-//     else
-//         printf("Invalid Payload: %llX\n", payload);
-// #else    
-//     if(valid)    
-//         printf("Valid Payload: %lX (Serial %lu, Status %lX)\n", payload, ser, typ);
-//     else
-//         printf("Invalid Payload: %lX\n", payload);
-// #endif
+ #ifdef __arm__
+     if(valid)    
+         printf("Valid Payload: %llX (Serial %llu, Status %llX)\n", payload, ser, typ);
+     else
+         printf("Invalid Payload: %llX\n", payload);
+ #else    
+     if(valid)    
+         printf("Valid Payload: %lX (Serial %lu, Status %lX)\n", payload, ser, typ);
+     else
+         printf("Invalid Payload: %lX\n", payload);
+ #endif
     
     static uint32_t packetCount = 0;
     static uint32_t errorCount = 0;

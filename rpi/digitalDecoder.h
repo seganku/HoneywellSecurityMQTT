@@ -1,15 +1,20 @@
 #ifndef __DIGITAL_DECODER_H__
 #define __DIGITAL_DECODER_H__
 
+#include "mqtt.h"
+
 #include <stdint.h>
 #include <map>
 
 class DigitalDecoder
 {
   public:
-    DigitalDecoder() = default;
+    //DigitalDecoder() = default;
+    //
+    DigitalDecoder(Mqtt &mqtt_init) : mqtt(mqtt_init) {}
     
     void handleData(char data);
+
     
   private:
   
@@ -22,6 +27,7 @@ class DigitalDecoder
 
     unsigned int samplesSinceEdge = 0;
     bool lastSample = false;
+    Mqtt &mqtt;
     
     struct deviceState_t
     {
