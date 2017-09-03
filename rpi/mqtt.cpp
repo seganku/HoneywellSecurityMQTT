@@ -7,11 +7,14 @@
 
 Mqtt::Mqtt(const char * _id, const char * _host, int _port) : mosquittopp(_id)
 {
+    int version = MQTT_PROTOCOL_V311;
     mosqpp::lib_init();
     this->keepalive = 60;    
     this->id = _id;
     this->port = _port;
     this->host = _host;
+    // Set version to 3.1.1
+    opts_set(MOSQ_OPT_PROTOCOL_VERSION, &version);
     // non blocking connection to broker request;
     connect_async(host, port, keepalive);
     // Start thread managing connection / publish / subscribekeepalive);

@@ -9,8 +9,6 @@
 class DigitalDecoder
 {
   public:
-    //DigitalDecoder() = default;
-    //
     DigitalDecoder(Mqtt &mqtt_init) : mqtt(mqtt_init) {}
     
     void handleData(char data);

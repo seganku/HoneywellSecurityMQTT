@@ -62,7 +62,7 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
 {
     deviceState_t ds;
     std::ostringstream topic;
-    topic << "/security/" << serial;
+    topic << "/security/sensors345/" << serial;
     
     // Extract prior info
     if(deviceStateMap.count(serial))
