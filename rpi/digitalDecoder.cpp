@@ -16,48 +16,6 @@
 #define SYNC_MASK    0xFFFF000000000000ul
 #define SYNC_PATTERN 0xFFFE000000000000ul
 
-void DigitalDecoder::writeDeviceState()
-{
-    std::ofstream file;
-    file.open("deviceState.json");
-    
-    if(!file.is_open())
-    {
-        printf("Could not open JSON file\n");
-        return;
-    }
-    
-    bool isFirst = true;
-    
-    file << "[" << std::endl;
-    for(const auto &dd : deviceStateMap)
-    {
-        if(!isFirst) file << "," << std::endl;
-        isFirst = false;
-        
-        file << "{" << std::endl;
-        file << "    \"serial\": " << dd.first << "," << std::endl;
-        file << "    \"isMotion\": " << (dd.second.isMotionDetector ? "true," : "false,") << std::endl;
-        file << "    \"tamper\": " << (dd.second.tamper ? "true," : "false,") << std::endl;
-        file << "    \"alarm\": " << (dd.second.alarm ? "true," : "false,") << std::endl;
-        file << "    \"batteryLow\": " << (dd.second.batteryLow ? "true," : "false,") << std::endl;
-        file << "    \"lastUpdateTime\": " << dd.second.lastUpdateTime << "," << std::endl;
-        file << "    \"lastAlarmTime\": " << dd.second.lastAlarmTime << std::endl;
-        file << "}";
-    }
-    
-    file << std::endl << "]" << std::endl;
-    
-    file.close();
-}
-
-//#warning "Update the SmartThings endpoint here"
-void DigitalDecoder::sendDeviceState()
-{
-    printf("Sending Device State\n");
-    //system("curl -H 'Authorization: Bearer 12345678-1234-1234-1234-1234567890ab' -H 'Content-Type: application/json' -X PUT -d '@/var/www/html/deviceState.json' https://graph.api.smartthings.com:443/api/smartapps/installations/12345678-1234-1234-1234-1234567890ab/event&");
-}
-
 void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
 {
     deviceState_t ds;
@@ -103,14 +61,10 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     // Put the answer back in the map
     deviceStateMap[serial] = ds;
     
-    // Record the current state
-    writeDeviceState();
-    
     // Send the notification if something changed
     if(state != ds.lastRawState)
     {
         mqtt.send(topic.str().c_str(), ds.alarm ? "ALARM" : "OK");
-        //sendDeviceState();
     }
     deviceStateMap[serial].lastRawState = state;
     
@@ -133,6 +87,7 @@ void DigitalDecoder::handlePayload(uint64_t payload)
     //
     uint64_t polynomial;
     if (sof == 0x2 || sof == 0xA) {
+        // 2GIG brand
         polynomial = 0x18050;
     } else {
         // sof == 0x8
