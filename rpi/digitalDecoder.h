@@ -39,6 +39,7 @@ class DigitalDecoder
         bool tamper;
         bool alarm;
         bool batteryLow;
+        bool timeout;
         
         uint8_t minAlarmStateSeen;
     };

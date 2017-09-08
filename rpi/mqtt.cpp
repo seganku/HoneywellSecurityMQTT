@@ -5,14 +5,16 @@
 #include <stdio.h>
 #include <string.h>
 
-Mqtt::Mqtt(const char * _id, const char * _host, int _port) : mosquittopp(_id)
+Mqtt::Mqtt(const char * _id, const char * _host, int _port, const char * _will_topic, const char * _will_message) : mosquittopp(_id)
 {
     int version = MQTT_PROTOCOL_V311;
     mosqpp::lib_init();
-    this->keepalive = 60;    
+    this->keepalive = 30;    
     this->id = _id;
     this->port = _port;
     this->host = _host;
+    this->will_topic = _will_topic;
+    this->will_message = _will_message;
     // Set version to 3.1.1
     opts_set(MOSQ_OPT_PROTOCOL_VERSION, &version);
     // non blocking connection to broker request;
@@ -40,6 +42,12 @@ void Mqtt::on_connect(int rc)
 {
     if ( rc == 0 ) {
         std::cout << ">> Mqtt - connected" << std::endl;
+        rc = set_will(will_topic, will_message);
+        if ( rc ) {
+            std::cout <<">> Mqtt - set will message to: " << will_message << std::endl;
+        } else {
+            std::cout <<">> Mqtt - Failed to set will message!" << std::endl;
+        }
     } else {
         std::cout << ">> Mqtt - failed to connect: (" << rc << ")" << std::endl;
     }

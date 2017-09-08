@@ -102,7 +102,7 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     
     for(const auto &dd : deviceStateMap)
     {
-        printf("%sDevice %7u: %s\n",dd.first==serial ? "*" : " ", dd.first, dd.second.alarm ? "ALARM" : "OK");
+        printf("%sDevice %7u: %s %s %s %s\n",dd.first==serial ? "*" : " ", dd.first, dd.second.alarm ? "ALARM" : "OK", dd.second.tamper ? "TAMPER" : "", dd.second.batteryLow ? "LOWBATT" : "", dd.second.timeout ? "TIMEOUT" : "");
     }
     printf("\n");
 }
@@ -148,6 +148,9 @@ void DigitalDecoder::handlePayload(uint64_t payload)
     //
     if(valid)
     {
+        // We received a valid packet so the receiver must be working
+        setRxGood(true);
+        // Update the device
         updateDeviceState(ser, typ);
     }
     
