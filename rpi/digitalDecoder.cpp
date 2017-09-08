@@ -16,11 +16,24 @@
 #define SYNC_MASK    0xFFFF000000000000ul
 #define SYNC_PATTERN 0xFFFE000000000000ul
 
+void DigitalDecoder::setRxGood(bool state)
+{
+    if (state != rxGood)
+    {
+        mqtt.send("/security/sensors345/rx_status", state ? "OK" : "FAILED");
+    }
+    rxGood = state;
+}
+
 void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
 {
     deviceState_t ds;
-    std::ostringstream topic;
-    topic << "/security/sensors345/" << serial;
+    uint8_t alarmState;
+    std::ostringstream alarmTopic;
+    alarmTopic << "/security/sensors345/" << serial;
+    std::ostringstream statusTopic(alarmTopic.str());
+    alarmTopic << "/alarm";
+    statusTopic << "/status";
     
     // Extract prior info
     if(deviceStateMap.count(serial))
@@ -29,21 +42,18 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     }
     else
     {
-        ds.isMotionDetector = false;
+        ds.minAlarmStateSeen = 0xFF;
     }
     
-    // Watch for anything that indicates this sensor is a motion detector
-    if(state < 0x80) ds.isMotionDetector = true;
+    // Update minimum/OK state if needed
+    // Look only at the non-tamper loop bits
+    alarmState = (state & 0xB);
+    if(alarmState < ds.minAlarmStateSeen) ds.minAlarmStateSeen = alarmState; 
     
-    // Decode motion/open bits
-    if(ds.isMotionDetector)
-    {
-        ds.alarm = (state & 0x80);
-    }
-    else
-    {
-        ds.alarm = (state & 0x20);
-    }
+    // Decode alarm bits
+    // We just alarm on any active loop that has been previously observed as inactive
+    // This hopefully avoids having to use per-sensor configuration
+    ds.alarm = (alarmState > ds.minAlarmStateSeen);
     
     // Decode tamper bit
     ds.tamper = (state & 0x40);
@@ -64,7 +74,29 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     // Send the notification if something changed
     if(state != ds.lastRawState)
     {
-        mqtt.send(topic.str().c_str(), ds.alarm ? "ALARM" : "OK");
+        std::ostringstream status;
+
+        // Send alarm state
+        mqtt.send(alarmTopic.str().c_str(), ds.alarm ? "ALARM" : "OK");
+
+        // Build and send combined status
+        if (!ds.tamper && !ds.batteryLow)
+        {
+            status << "OK";
+        } else {
+
+            if (ds.tamper)
+            {
+                status << "TAMPER ";
+            }
+            
+            if (ds.batteryLow)
+            {
+                status << "LOWBATT";
+            }
+        }
+        mqtt.send(statusTopic.str().c_str(), status.str().c_str());
+
     }
     deviceStateMap[serial].lastRawState = state;
     

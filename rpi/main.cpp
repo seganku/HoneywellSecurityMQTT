@@ -6,16 +6,25 @@
 
 #include <iostream>
 #include <cmath>
+#include <csignal>
 #include <unistd.h>
 #include <sys/time.h>
 
+#define RX_TIMEOUT_MIN      (90)
+
+Mqtt mqtt = Mqtt("sensors345", "127.0.0.1", 1883);
 float magLut[0x10000];
 
+void alarmHandler(int signal)
+{
+    mqtt.send("/security/sensors345/rx_status", "NOSIGNAL");
+    alarm(RX_TIMEOUT_MIN*60); // Pulse checks seem to be about 60-70 minutes apart
+}
 
 int main()
 {
-    // Set up MQTT
-    Mqtt mqtt = Mqtt("sensors345", "127.0.0.1", 1883);
+    // Set MQTT will in case of disconnection/termination
+    mqtt.set_will("/security/sensors345/rx_status", "FAILED");
 
     //
     // Open the device
@@ -115,10 +124,16 @@ int main()
             adec->handleMagnitude(mag);
         }
     };
-    
+
+    // Setup watchdog to check for a common-mode failure (e.g. antenna disconnection)
+    std::signal(SIGALRM, alarmHandler);
+    alarm(RX_TIMEOUT_MIN*60); // Pulse checks seem to be about 60-70 minutes apart
+  
+    // Initialize RX state to good
+    dDecoder.setRxGood(true);
     const int err = rtlsdr_read_async(dev, cb, &aDecoder, 0, 0);
     std::cout << "Read Async returned " << err << std::endl;
-    
+   
 /*    
     //
     // Synchronous Receive

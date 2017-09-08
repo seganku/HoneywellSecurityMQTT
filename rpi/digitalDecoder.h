@@ -12,10 +12,11 @@ class DigitalDecoder
     DigitalDecoder(Mqtt &mqtt_init) : mqtt(mqtt_init) {}
     
     void handleData(char data);
+    void setRxGood(bool state);
 
     
   private:
-  
+
     void writeDeviceState();
     void sendDeviceState();
     void updateDeviceState(uint32_t serial, uint8_t state);
@@ -25,6 +26,7 @@ class DigitalDecoder
 
     unsigned int samplesSinceEdge = 0;
     bool lastSample = false;
+    bool rxGood = false;
     Mqtt &mqtt;
     
     struct deviceState_t
@@ -38,7 +40,7 @@ class DigitalDecoder
         bool alarm;
         bool batteryLow;
         
-        bool isMotionDetector;
+        uint8_t minAlarmStateSeen;
     };
 
     std::map<uint32_t, deviceState_t> deviceStateMap;

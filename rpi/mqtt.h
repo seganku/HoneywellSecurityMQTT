@@ -20,6 +20,7 @@ class Mqtt : public mosqpp::mosquittopp
         Mqtt(const char *id, const char *host, int port);
         ~Mqtt();
         bool send(const char * _topic, const char * _message);
+        bool set_will(const char * _topic, const char * _message);
 };
 
 #endif

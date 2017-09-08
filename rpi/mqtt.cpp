@@ -26,6 +26,11 @@ Mqtt::~Mqtt() {
     mosqpp::lib_cleanup();
 }
 
+bool Mqtt::set_will(const char * _topic, const char * _message)
+{
+    int ret = will_set(_topic, strlen(_message), _message, 1, true);
+    return ( ret == MOSQ_ERR_SUCCESS );
+}
 
 void Mqtt::on_disconnect(int rc) {
     std::cout << ">> Mqtt - disconnected(" << rc << ")" << std::endl;
