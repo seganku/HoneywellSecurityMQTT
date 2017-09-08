@@ -16,11 +16,15 @@
 #define SYNC_MASK    0xFFFF000000000000ul
 #define SYNC_PATTERN 0xFFFE000000000000ul
 
+static const char BASE_TOPIC[] = "/security/sensors345/";
+
 void DigitalDecoder::setRxGood(bool state)
 {
+    std::string topic(BASE_TOPIC);
+    topic += "rx_status";
     if (state != rxGood)
     {
-        mqtt.send("/security/sensors345/rx_status", state ? "OK" : "FAILED");
+        mqtt.send(topic.c_str(), state ? "OK" : "FAILED");
     }
     rxGood = state;
 }
@@ -30,10 +34,11 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     deviceState_t ds;
     uint8_t alarmState;
     std::ostringstream alarmTopic;
-    alarmTopic << "/security/sensors345/" << serial;
-    std::ostringstream statusTopic(alarmTopic.str());
-    alarmTopic << "/alarm";
-    statusTopic << "/status";
+    std::ostringstream statusTopic;
+    alarmTopic << BASE_TOPIC << serial << "/alarm";
+    statusTopic << BASE_TOPIC << serial << "/status";
+    std::cout << "alarmTopic: " << alarmTopic.str().c_str() << std::endl;
+    std::cout << "statusTopic: " << statusTopic.str().c_str() << std::endl;
     
     // Extract prior info
     if(deviceStateMap.count(serial))
@@ -47,7 +52,7 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     
     // Update minimum/OK state if needed
     // Look only at the non-tamper loop bits
-    alarmState = (state & 0xB);
+    alarmState = (state & 0xB0);
     if(alarmState < ds.minAlarmStateSeen) ds.minAlarmStateSeen = alarmState; 
     
     // Decode alarm bits
@@ -97,14 +102,15 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
         }
         mqtt.send(statusTopic.str().c_str(), status.str().c_str());
 
+        for(const auto &dd : deviceStateMap)
+        {
+            printf("%sDevice %7u: %s %s %s %s\n",dd.first==serial ? "*" : " ", dd.first, dd.second.alarm ? "ALARM" : "OK", dd.second.tamper ? "TAMPER" : "", dd.second.batteryLow ? "LOWBATT" : "", dd.second.timeout ? "TIMEOUT" : "");
+        }
+        std::cout << std::endl;
+
     }
     deviceStateMap[serial].lastRawState = state;
     
-    for(const auto &dd : deviceStateMap)
-    {
-        printf("%sDevice %7u: %s %s %s %s\n",dd.first==serial ? "*" : " ", dd.first, dd.second.alarm ? "ALARM" : "OK", dd.second.tamper ? "TAMPER" : "", dd.second.batteryLow ? "LOWBATT" : "", dd.second.timeout ? "TIMEOUT" : "");
-    }
-    printf("\n");
 }
 
 void DigitalDecoder::handlePayload(uint64_t payload)
@@ -144,6 +150,30 @@ void DigitalDecoder::handlePayload(uint64_t payload)
     const bool valid = (sum == 0);
     
     //
+    // Print Packet
+    //
+ #ifdef __arm__
+     if(valid)    
+         printf("Valid Payload: %llX (Serial %llu, Status %llX)", payload, ser, typ);
+     else
+         printf("Invalid Payload: %llX", payload);
+ #else    
+     if(valid)    
+         printf("Valid Payload: %lX (Serial %lu, Status %lX)", payload, ser, typ);
+     else
+         printf("Invalid Payload: %lX", payload);
+ #endif
+     std::cout << std::endl;
+    
+    packetCount++;
+    if(!valid)
+    {
+        errorCount++;
+        printf("%u/%u packets failed CRC", errorCount, packetCount);
+        std::cout << std::endl;
+    }
+
+    //
     // Tell the world
     //
     if(valid)
@@ -152,32 +182,6 @@ void DigitalDecoder::handlePayload(uint64_t payload)
         setRxGood(true);
         // Update the device
         updateDeviceState(ser, typ);
-    }
-    
-    
-    //
-    // Print Packet
-    //
- #ifdef __arm__
-     if(valid)    
-         printf("Valid Payload: %llX (Serial %llu, Status %llX)\n", payload, ser, typ);
-     else
-         printf("Invalid Payload: %llX\n", payload);
- #else    
-     if(valid)    
-         printf("Valid Payload: %lX (Serial %lu, Status %lX)\n", payload, ser, typ);
-     else
-         printf("Invalid Payload: %lX\n", payload);
- #endif
-    
-    static uint32_t packetCount = 0;
-    static uint32_t errorCount = 0;
-    
-    packetCount++;
-    if(!valid)
-    {
-        errorCount++;
-        printf("%u/%u packets failed CRC\n", errorCount, packetCount);
     }
 }
 

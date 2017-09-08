@@ -42,11 +42,13 @@ void Mqtt::on_connect(int rc)
 {
     if ( rc == 0 ) {
         std::cout << ">> Mqtt - connected" << std::endl;
-        rc = set_will(will_topic, will_message);
-        if ( rc ) {
-            std::cout <<">> Mqtt - set will message to: " << will_message << std::endl;
-        } else {
-            std::cout <<">> Mqtt - Failed to set will message!" << std::endl;
+        if (will_topic != NULL && will_message != NULL) {
+            rc = set_will(will_topic, will_message);
+            if ( rc ) {
+                std::cout <<">> Mqtt - set will message to: " << will_message << std::endl;
+            } else {
+                std::cout <<">> Mqtt - Failed to set will message!" << std::endl;
+            }
         }
     } else {
         std::cout << ">> Mqtt - failed to connect: (" << rc << ")" << std::endl;

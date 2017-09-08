@@ -28,6 +28,8 @@ class DigitalDecoder
     bool lastSample = false;
     bool rxGood = false;
     Mqtt &mqtt;
+    uint32_t packetCount = 0;
+    uint32_t errorCount = 0;
     
     struct deviceState_t
     {
