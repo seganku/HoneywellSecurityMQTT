@@ -15,18 +15,25 @@
 
 #define SYNC_MASK    0xFFFF000000000000ul
 #define SYNC_PATTERN 0xFFFE000000000000ul
+#define RX_GOOD_MIN_SEC (60)
 
 static const char BASE_TOPIC[] = "/security/sensors345/";
 
 void DigitalDecoder::setRxGood(bool state)
 {
     std::string topic(BASE_TOPIC);
+    timeval now;
+
     topic += "rx_status";
-    if (state != rxGood)
+
+    gettimeofday(&now, nullptr);
+
+    if (rxGood != state || (now.tv_sec - lastRxGoodUpdateTime) > RX_GOOD_MIN_SEC)
     {
         mqtt.send(topic.c_str(), state ? "OK" : "FAILED");
     }
     rxGood = state;
+    lastRxGoodUpdateTime = now.tv_sec;
 }
 
 void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
@@ -68,6 +75,7 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     timeval now;
     gettimeofday(&now, nullptr);
     ds.lastUpdateTime = now.tv_sec;
+    ds.timeout = false;
     
     if(ds.alarm) ds.lastAlarmTime = now.tv_sec;
 

@@ -27,6 +27,7 @@ class DigitalDecoder
     unsigned int samplesSinceEdge = 0;
     bool lastSample = false;
     bool rxGood = false;
+    uint64_t lastRxGoodUpdateTime = 0;
     Mqtt &mqtt;
     uint32_t packetCount = 0;
     uint32_t errorCount = 0;
