@@ -16,6 +16,7 @@
 #define SYNC_MASK    0xFFFF000000000000ul
 #define SYNC_PATTERN 0xFFFE000000000000ul
 #define RX_GOOD_MIN_SEC (60)
+#define UPDATE_MIN_SEC (60)
 
 static const char BASE_TOPIC[] = "/security/sensors345/";
 
@@ -53,6 +54,8 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     else
     {
         ds.minAlarmStateSeen = 0xFF;
+        ds.lastUpdateTime = 0;
+        ds.lastAlarmTime = 0;
     }
     
     // Update minimum/OK state if needed
@@ -74,7 +77,6 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     // Timestamp
     timeval now;
     gettimeofday(&now, nullptr);
-    ds.lastUpdateTime = now.tv_sec;
     ds.timeout = false;
     
     if(ds.alarm) ds.lastAlarmTime = now.tv_sec;
@@ -82,15 +84,15 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     // Put the answer back in the map
     deviceStateMap[serial] = ds;
     
-    // Send the notification if something changed
-    if(state != ds.lastRawState)
+    // Send the notification if something changed or enough time has passed
+    if(state != ds.lastRawState || (now.tv_sec - ds.lastUpdateTime) > UPDATE_MIN_SEC)
     {
         std::ostringstream status;
 
         // Send alarm state
         mqtt.send(alarmTopic.str().c_str(), ds.alarm ? "ALARM" : "OK");
 
-        // Build and send combined status
+        // Build and send combined fault status
         if (!ds.tamper && !ds.batteryLow)
         {
             status << "OK";
@@ -115,6 +117,7 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
         std::cout << std::endl;
 
     }
+    ds.lastUpdateTime = now.tv_sec;
     deviceStateMap[serial].lastRawState = state;
     
 }
