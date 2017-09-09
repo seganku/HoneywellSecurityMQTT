@@ -37,8 +37,6 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     std::ostringstream statusTopic;
     alarmTopic << BASE_TOPIC << serial << "/alarm";
     statusTopic << BASE_TOPIC << serial << "/status";
-    std::cout << "alarmTopic: " << alarmTopic.str().c_str() << std::endl;
-    std::cout << "statusTopic: " << statusTopic.str().c_str() << std::endl;
     
     // Extract prior info
     if(deviceStateMap.count(serial))
