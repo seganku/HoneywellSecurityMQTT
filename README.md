@@ -1,6 +1,6 @@
 # HoneywellSecurityMQTT
 
-This project is based on jhaines0 HoneywellSecurity project but instead of being intended for integration with SmartThings, it is designed to report status via MQTT.  This allows it to easily be used with other systems such as Home Assistant.
+This project is based on jhaines0's HoneywellSecurity project but instead of being intended for integration with SmartThings, it is designed to report status via MQTT.  This allows it to easily be used with other systems such as Home Assistant.
 
 
 ## Features
@@ -20,22 +20,23 @@ This project is based on jhaines0 HoneywellSecurity project but instead of being
 ## Installation
 ### Dependencies
 On a Debian-based system, something like this should work:
-  sudo apt-get install build-essential librtlsdr-dev rtl-sdr libmosquittopp-dev
+  `sudo apt-get install build-essential librtlsdr-dev rtl-sdr libmosquittopp-dev`
 
 To avoid having to run as root, you can add the following rule to a file in `/etc/udev/rules.d`
-  SUBSYSTEMS=="usb", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="2838", MODE:="0660", GROUP:="audio"
+  `SUBSYSTEMS=="usb", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="2838", MODE:="0660", GROUP:="audio"`
 
 Then add the desired user to the `audio` group.
-If you plugged in the RTL-SDR before installing rtl-sdr, you probably will need to do something like "sudo rmmod rtl2832 dvb\_usb\_rtl28xxu" then remove and reinstall the adapter.
+If you plugged in the RTL-SDR before installing rtl-sdr, you probably will need to do something like `sudo rmmod rtl2832 dvb\_usb\_rtl28xxu` then remove and reinstall the adapter.
 
 ### Configuration
 If your MQTT broker is not at localhost:1883, then you will need to modify `main.cpp` accordingly.
 ### Building
+
   cd src
   ./build.sh
 
 ### Running
-  ./honeywell
+  `./honeywell`
 
 ### Home Assistant example
 ```yaml
