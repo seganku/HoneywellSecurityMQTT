@@ -46,6 +46,7 @@ If your MQTT broker is not at localhost:1883, then you will need to modify `main
 ### Home Assistant example
 ```yaml
 
+sensor:
   - platform: mqtt
     name: 345MHz Sensor RX Fault
     state_topic: "/security/sensors345/rx_status"
@@ -53,14 +54,15 @@ If your MQTT broker is not at localhost:1883, then you will need to modify `main
     payload_off: "OK"
     device_class: safety
   - platform: mqtt
+    name: Front Door Status
+    state_topic: "/security/sensors345/732804/status"
+binary_sensor:
+  - platform: mqtt
     name: Front Door
     state_topic: "/security/sensors345/732804/alarm"
     payload_on: "ALARM"
     payload_off: "OK"
     device_class: opening
-  - platform: mqtt
-    name: Front Door Status
-    state_topic: "/security/sensors345/732804/status"
 
 ```
 
