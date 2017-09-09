@@ -10,11 +10,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <csignal>
 
 
+// Pulse checks seem to be about 60-70 minutes apart
+#define RX_TIMEOUT_MIN      (90)
 
 #define SYNC_MASK    0xFFFF000000000000ul
 #define SYNC_PATTERN 0xFFFE000000000000ul
+
+// Don't send these messages more than once per minute unless there is a state change
 #define RX_GOOD_MIN_SEC (60)
 #define UPDATE_MIN_SEC (60)
 
@@ -33,6 +38,10 @@ void DigitalDecoder::setRxGood(bool state)
     {
         mqtt.send(topic.c_str(), state ? "OK" : "FAILED");
     }
+
+    // Reset watchdog either way
+    alarm(RX_TIMEOUT_MIN*60);
+
     rxGood = state;
     lastRxGoodUpdateTime = now.tv_sec;
 }
