@@ -125,9 +125,9 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
         }
         std::cout << std::endl;
 
+        deviceStateMap[serial].lastUpdateTime = now.tv_sec;
+        deviceStateMap[serial].lastRawState = state;
     }
-    ds.lastUpdateTime = now.tv_sec;
-    deviceStateMap[serial].lastRawState = state;
     
 }
 
