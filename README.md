@@ -9,6 +9,7 @@ This project is based on jhaines0's HoneywellSecurity project but instead of bei
  - Decodes sensor status such as tamper and low battery
  - Reports alarm and sensor status to an MQTT broker
  - Watchdog with reporting in case of receiver failure
+ - Checks for sensors failing to report in
 
 
 ## Requirements
@@ -48,7 +49,7 @@ If your MQTT broker is not at localhost:1883, then you will need to modify `main
 
 sensor:
   - platform: mqtt
-    name: 345MHz Sensor RX Fault
+    name: 345MHz RX Fault
     state_topic: "/security/sensors345/rx_status"
     payload_on: "FAILED"
     payload_off: "OK"
@@ -71,6 +72,5 @@ binary_sensor:
  - HoneywellSecurityMQTT attempts to use MQTT wills to indicate a failure if the program dies unexpectedly, but this doesn't seem to work.  I may be misunderstanding how this is supposed to behave, or perhaps it is some issue with HA's embedded MQTT broker.  If anyone has any ideas here, I'm all ears.
 
 ## Future Work
- - Check for learned sensors failing to report in
  - Cache learned sensor data
  - Fix broker indication of unexpected termination
