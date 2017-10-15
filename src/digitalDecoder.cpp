@@ -16,6 +16,9 @@
 // Pulse checks seem to be about 60-70 minutes apart
 #define RX_TIMEOUT_MIN      (90)
 
+// Give each sensor 3 intervals before we flag a problem
+#define SENSOR_TIMEOUT_MIN  (90*3)
+
 #define SYNC_MASK    0xFFFF000000000000ul
 #define SYNC_PATTERN 0xFFFE000000000000ul
 
@@ -119,6 +122,8 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
         }
         mqtt.send(statusTopic.str().c_str(), status.str().c_str());
 
+        checkForTimeouts();
+
         for(const auto &dd : deviceStateMap)
         {
             printf("%sDevice %7u: %s %s %s %s\n",dd.first==serial ? "*" : " ", dd.first, dd.second.alarm ? "ALARM" : "OK", dd.second.tamper ? "TAMPER" : "", dd.second.batteryLow ? "LOWBATT" : "", dd.second.timeout ? "TIMEOUT" : "");
@@ -129,6 +134,31 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
         deviceStateMap[serial].lastRawState = state;
     }
     
+}
+
+/* Checks all devices for last time updated */
+void DigitalDecoder::checkForTimeouts()
+{
+    timeval now;
+    std::ostringstream status;
+
+    status << "TIMEOUT";
+    gettimeofday(&now, nullptr);
+
+    for(const auto &dd : deviceStateMap)
+    {
+        if ((now.tv_sec - dd.second.lastUpdateTime) > SENSOR_TIMEOUT_MIN*60) 
+        {
+            if (false == dd.second.timeout)
+            {
+                std::ostringstream statusTopic;
+
+                deviceStateMap[dd.first].timeout = true;
+                statusTopic << BASE_TOPIC << dd.first << "/status";
+                mqtt.send(statusTopic.str().c_str(), status.str().c_str());
+            }
+        }
+    }
 }
 
 void DigitalDecoder::handlePayload(uint64_t payload)

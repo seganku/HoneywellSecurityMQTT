@@ -23,6 +23,7 @@ class DigitalDecoder
     void handlePayload(uint64_t payload);
     void handleBit(bool value);
     void decodeBit(bool value);
+    void checkForTimeouts();
 
     unsigned int samplesSinceEdge = 0;
     bool lastSample = false;
