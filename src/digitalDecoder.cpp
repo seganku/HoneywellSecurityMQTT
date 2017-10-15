@@ -122,6 +122,9 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
         }
         mqtt.send(statusTopic.str().c_str(), status.str().c_str());
 
+        deviceStateMap[serial].lastUpdateTime = now.tv_sec;
+        deviceStateMap[serial].lastRawState = state;
+
         checkForTimeouts();
 
         for(const auto &dd : deviceStateMap)
@@ -130,8 +133,6 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
         }
         std::cout << std::endl;
 
-        deviceStateMap[serial].lastUpdateTime = now.tv_sec;
-        deviceStateMap[serial].lastRawState = state;
     }
     
 }
