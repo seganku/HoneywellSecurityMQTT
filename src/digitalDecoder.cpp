@@ -17,7 +17,7 @@
 #define RX_TIMEOUT_MIN      (90)
 
 // Give each sensor 3 intervals before we flag a problem
-#define SENSOR_TIMEOUT_MIN  (90*3)
+#define SENSOR_TIMEOUT_MIN  (90*5)
 
 #define SYNC_MASK    0xFFFF000000000000ul
 #define SYNC_PATTERN 0xFFFE000000000000ul
