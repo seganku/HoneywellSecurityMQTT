@@ -1,6 +1,7 @@
 #include "digitalDecoder.h"
 #include "analogDecoder.h"
 #include "mqtt.h"
+#include "mqtt_config.h"
 
 #include <rtl-sdr.h>
 
@@ -13,7 +14,7 @@
 
 // Init MQTT, including will in case of disconnection
 // TODO: Will doesn't seem to be working with HA as expected
-Mqtt mqtt = Mqtt("sensors345", "127.0.0.1", 1883, "/security/sensors345/rx_status", "FAILED");
+Mqtt mqtt = Mqtt("sensors345", MQTT_HOST, MQTT_PORT, MQTT_USERNAME, MQTT_PASSWORD, "/security/sensors345/rx_status", "FAILED");
 DigitalDecoder dDecoder(mqtt);
 AnalogDecoder aDecoder;
 

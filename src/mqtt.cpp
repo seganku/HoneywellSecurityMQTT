@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-Mqtt::Mqtt(const char * _id, const char * _host, int _port, const char * _will_topic, const char * _will_message) : mosquittopp(_id)
+Mqtt::Mqtt(const char * _id, const char * _host, int _port, const char * _username, const char * _password, const char * _will_topic, const char * _will_message) : mosquittopp(_id)
 {
     int version = MQTT_PROTOCOL_V311;
     mosqpp::lib_init();
@@ -17,6 +17,10 @@ Mqtt::Mqtt(const char * _id, const char * _host, int _port, const char * _will_t
     this->will_message = _will_message;
     // Set version to 3.1.1
     opts_set(MOSQ_OPT_PROTOCOL_VERSION, &version);
+    // Set username and password if non-null
+    if (strlen(_username) > 0 && strlen(_password) > 0) {
+        username_pw_set(_username, _password);
+    }
     // non blocking connection to broker request;
     connect_async(host, port, keepalive);
     // Start thread managing connection / publish / subscribekeepalive);
