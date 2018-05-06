@@ -34,7 +34,8 @@ Then add the desired user to the `audio` group.
 If you plugged in the RTL-SDR before installing rtl-sdr, you probably will need to do something like `sudo rmmod rtl2832 dvb_usb_rtl28xxu` then remove and reinstall the adapter.
 
 ### Configuration
-If your MQTT broker is not at localhost:1883, then you will need to modify `main.cpp` accordingly.
+Modify `mqtt_config.h` to specify the host, port, username, and password of your MQTT broker.  If `""` is used for the username or password, then an anonymous login is attempted.
+
 ### Building
 ```
   cd src
