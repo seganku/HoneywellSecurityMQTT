@@ -21,6 +21,15 @@ Mqtt::Mqtt(const char * _id, const char * _host, int _port, const char * _userna
     if (strlen(_username) > 0 && strlen(_password) > 0) {
         username_pw_set(_username, _password);
     }
+    // Set last will and testament (LWT) message
+    if (will_topic != NULL && will_message != NULL) {
+        int rc = set_will(will_topic, will_message);
+        if ( rc ) {
+            std::cout <<">> Mqtt - set LWT message to: " << will_message << std::endl;
+        } else {
+            std::cout <<">> Mqtt - Failed to set LWT message!" << std::endl;
+        }
+    }
     // non blocking connection to broker request;
     connect_async(host, port, keepalive);
     // Start thread managing connection / publish / subscribekeepalive);
@@ -46,14 +55,6 @@ void Mqtt::on_connect(int rc)
 {
     if ( rc == 0 ) {
         std::cout << ">> Mqtt - connected" << std::endl;
-        if (will_topic != NULL && will_message != NULL) {
-            rc = set_will(will_topic, will_message);
-            if ( rc ) {
-                std::cout <<">> Mqtt - set will message to: " << will_message << std::endl;
-            } else {
-                std::cout <<">> Mqtt - Failed to set will message!" << std::endl;
-            }
-        }
     } else {
         std::cout << ">> Mqtt - failed to connect: (" << rc << ")" << std::endl;
     }
