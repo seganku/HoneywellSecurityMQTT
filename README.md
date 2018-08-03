@@ -50,12 +50,6 @@ Modify `mqtt_config.h` to specify the host, port, username, and password of your
 
 sensor:
   - platform: mqtt
-    name: 345MHz RX Fault
-    state_topic: "/security/sensors345/rx_status"
-    payload_on: "FAILED"
-    payload_off: "OK"
-    device_class: safety
-  - platform: mqtt
     name: Front Door Status
     state_topic: "/security/sensors345/732804/status"
 binary_sensor:
@@ -65,12 +59,14 @@ binary_sensor:
     payload_on: "ALARM"
     payload_off: "OK"
     device_class: opening
+  - platform: mqtt
+    name: 345MHz RX Fault
+    state_topic: "/security/sensors345/rx_status"
+    payload_on: "FAILED"
+    payload_off: "OK"
+    device_class: safety
 
 ```
 
 ## Notes
  - The alarm loop bit will vary depending on sensor type and installation.  To handle this without requiring manual configuration HoneywellSecurityMQTT will need to receive at least one non-triggered packet from each sensor.  This can be accomplished by letting it run for at least ~90 minutes to allow pulse checks to arrive from each sensor.  This does mean that if the first packet received is due to an event (e.g. open door), it will not be detected.  Subsequent detections will work, however.  A future improvement is to save the learned devices and their behavior so that future executions of the program will not require this learning period.
-
-## Future Work
- - Cache learned sensor data
- - Fix broker indication of unexpected termination
