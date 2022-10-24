@@ -45,6 +45,27 @@ Modify `mqtt_config.h` to specify the host, port, username, and password of your
 ### Running
   `./honeywell`
 
+or
+
+  `/etc/systemd/system/honeywell.service`:
+
+```
+  [Unit]
+  Description=Honeywell 345MHz Alarms to MQTT service
+  After=network.target
+  StartLimitIntervalSec=0
+
+  [Service]
+  Type=simple
+  Restart=always
+  RestartSec=1
+  User=rf
+  ExecStart=/usr/bin/sh -c '/home/rf/honeywell | /usr/bin/logger'
+
+  [Install]
+  WantedBy=multi-user.target
+```
+
 ### Home Assistant example
 ```yaml
 
